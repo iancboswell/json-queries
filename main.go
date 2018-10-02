@@ -26,7 +26,6 @@ func main() {
 			"sqlx.open() failed with: %v", err)
 	}
 
-	RawQueries()
 	SquirrelQueries()
 }
 
@@ -115,18 +114,15 @@ func SquirrelQueries() {
 
 	//
 
-	// TODO not working...
+	// TODO: sq.Eq doesn't cut it here, for some reason.
 	k = "budget_woes"
 	v2 := true
 	query, args, err = sq.Select("name").From("mecha").
-		Where(sq.Eq{fmt.Sprintf("exts -> '$.%s'", k): v2}).
+		Where(fmt.Sprintf("exts -> '$.%s' = %t", k, v2)).
 		ToSql()
 	if err != nil {
 		log.Fatalf("SQL generation failed: %v", err)
 	}
-
-	log.Printf("Query:\n%s\n", query)
-	log.Printf("Args:\n%v\n", args)
 
 	err = db.Select(&ret, query, args...)
 	if err != nil {
@@ -180,8 +176,10 @@ func SquirrelQueries() {
 	ret = make([]string, 0, 1)
 
 	// TODO...
+	k = "mechs"
+	v = "Gunbuster"
 	query, args, err = sq.Select("name").From("mecha").
-		Where("JSON_CONTAINS(exts, JSON_QUOTE('Gunbuster'), \"$.mechs\")").
+		Where(fmt.Sprintf("JSON_CONTAINS(exts, JSON_QUOTE('%s'), \"$.%s\")", v, k)).
 		ToSql()
 	if err != nil {
 		log.Fatalf("SQL generation failed: %v", err)
